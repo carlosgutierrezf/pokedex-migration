@@ -1,0 +1,33 @@
+parserOptions:
+  ecmaVersion: latest
+  sourceType: module
+
+env:
+  es2021: true
+  node: true
+
+extends:
+  - eslint:recommended
+  - prettier
+
+rules:
+  no-constant-binary-expression: error
+  no-constructor-return: error
+  camelcase: error # Camelcase naming convention
+  new-cap: error # Require constructor names to begin with a capital letter. THis will force to write class names stariting with capital letter.
+  no-magic-numbers: error # Avoid magic numbers
+  eqeqeq: error # Require the use of === and !==
+
+overrides:
+  - files:
+      - tests/**/*.test.js
+    plugins:
+      - jest
+    extends:
+      - plugin:jest/recommended
+    rules:
+      jest/no-disabled-tests: warn
+      jest/no-focused-tests: error
+      jest/no-identical-title: error
+      jest/prefer-to-have-length: warn
+      jest/valid-expect: error

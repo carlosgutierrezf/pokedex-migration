@@ -1,10 +1,11 @@
 const axios = require('axios');
 const dotenv = require('dotenv');
+const { logger } = require('./logger.js');
 
 dotenv.config();
 
 const HUBSPOT_BASE_URL = 'https://api.hubapi.com';
-const HUBSPOT_API_KEY = process.env.HUBSPOT_API_KEY;;
+const HUBSPOT_API_KEY = process.env.HUBSPOT_API_KEY;
 
 // Migrate Pokémon to Contacts
 async function migratePokemons(pokemons) {
@@ -30,10 +31,12 @@ async function migratePokemons(pokemons) {
                     'Content-Type': 'application/json',
                 },
             });
+
+            logger.log({ level: 'info', message: `Pokémon migrated successfully: ${ JSON.stringify( pokemon ) }` });
         }
-        console.log('Pokémon migrated successfully!');
+        
     } catch (error) {
-        console.error('Error response:', error.response?.data); // Log the full error response
+        logger.log ({ level: 'error', message: `Error response: ${ JSON.stringify( error.response?.data ) }` }); // Log the full error response
         throw new Error(`Failed to migrate Pokémon: ${error.message}`);
     }
 }
