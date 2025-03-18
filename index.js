@@ -2,20 +2,50 @@ const express = require('express');
 const dotenv = require('dotenv');
 const { fetchPokemons, fetchMoves, fetchLocations } = require('./src/services/pokeapi'); // Correct import
 const hubspot = require('./src/services/hubspot');
+const { z } = require('zod');
+const cors = require('cors');
+const helmet = require('helmet');
+
+const userSchema = z.object({
+  limit: z.number().int(),
+});
 
 dotenv.config();
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const swaggerSetup = require('./swagger');
+swaggerSetup(app);
+
+// Use Helmet to set security-related HTTP headers
+app.use(helmet());
+
+app.use(cors({
+  origin: '*'
+}));
+
+
 app.use(express.json());
 
-// Endpoint to trigger migration
+/**
+ * @swagger
+ * /migrate:
+ *   post:
+ *     summary: Migrate Pokemon data to HubSpot
+ *     responses:
+ *       200:
+ *         description: Migration completed successfully
+ *       500:
+ *         description: Internal Server Error
+ */
 app.post('/migrate', async (req, res) => {
   try {
-    const pokemons = await fetchPokemons(100); // Use the imported function
-    const moves = await fetchMoves(100);
-    const locations = await fetchLocations(100);
+    const { limit } = userSchema.parse(req.body);
+    const pokemons = await fetchPokemons(limit); // Use the imported function
+    const moves = await fetchMoves(limit);
+    const locations = await fetchLocations(limit);
 
     // Migrate data to HubSpot
     await hubspot.migratePokemons(pokemons);
