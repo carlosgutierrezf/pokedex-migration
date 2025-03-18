@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const HUBSPOT_BASE_URL = 'https://api.hubapi.com';
-const HUBSPOT_API_KEY = "pat-na1-486d2850-64b7-4539-b46e-65d6adbc1447";
+const HUBSPOT_API_KEY = process.env.HUBSPOT_API_KEY;;
 
 // Migrate Pokémon to Contacts
 async function migratePokemons(pokemons) {
@@ -26,7 +26,7 @@ async function migratePokemons(pokemons) {
             };
             await axios.post(`${HUBSPOT_BASE_URL}/crm/v3/objects/contacts`, contactData, {
                 headers: {
-                    Authorization: `Bearer pat-na1-486d2850-64b7-4539-b46e-65d6adbc1447`,
+                    Authorization: `Bearer ${HUBSPOT_API_KEY}`,
                     'Content-Type': 'application/json',
                 },
             });
