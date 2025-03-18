@@ -18,9 +18,9 @@ app.post('/migrate', async (req, res) => {
     const locations = await fetchLocations(100);
 
     // Migrate data to HubSpot
-    //await hubspot.migratePokemons(pokemons);
+    await hubspot.migratePokemons(pokemons);
     await hubspot.migrateMoves(moves);
-    //await hubspot.migrateLocations(locations);
+    await hubspot.migrateLocations(locations);
 
     res.status(200).json({ message: 'Migration completed successfully!' });
   } catch (error) {
