@@ -1,6 +1,6 @@
 const express = require('express');
 const dotenv = require('dotenv');
-const { fetchPokemons } = require('./src/services/pokeapi'); // Correct import
+const { fetchPokemons, fetchMoves, fetchLocations } = require('./src/services/pokeapi'); // Correct import
 const hubspot = require('./src/services/hubspot');
 
 dotenv.config();
@@ -14,12 +14,12 @@ app.use(express.json());
 app.post('/migrate', async (req, res) => {
   try {
     const pokemons = await fetchPokemons(100); // Use the imported function
-    //const moves = await fetchMoves(100);
-    //const locations = await fetchLocations(100);
+    const moves = await fetchMoves(100);
+    const locations = await fetchLocations(100);
 
     // Migrate data to HubSpot
     //await hubspot.migratePokemons(pokemons);
-    //await hubspot.migrateMoves(moves);
+    await hubspot.migrateMoves(moves);
     //await hubspot.migrateLocations(locations);
 
     res.status(200).json({ message: 'Migration completed successfully!' });

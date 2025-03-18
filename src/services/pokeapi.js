@@ -24,7 +24,6 @@ async function fetchPokemons(limit = 100) {
         };
       })
     );
-    console.log("pokemons: ", pokemons)
     return pokemons;
   } catch (error) {
     throw new Error(`Failed to fetch Pokémon: ${error.message}`);
@@ -46,6 +45,7 @@ async function fetchMoves(limit = 100) {
         };
       })
     );
+    
     return moves;
   } catch (error) {
     throw new Error(`Failed to fetch moves: ${error.message}`);
@@ -63,11 +63,12 @@ async function fetchLocations(limit = 100) {
           id: details.data.id,
           name: details.data.name,
           region: details.data.region.name,
-          generation: details.data.generation.name,
+          generation: details.data.game_indices[0]?.generation?.name || 'unknown',
           numberOfAreas: details.data.areas.length,
         };
       })
     );
+    
     return locations;
   } catch (error) {
     throw new Error(`Failed to fetch locations: ${error.message}`);
