@@ -76,12 +76,12 @@ async function fetchLocations(limit = 100) {
     try {
       const locations = (await pokemon.readObject('location', limit)).map((location) => {
         return {
-            id: details.data.id,
-            name: details.data.name,
-            region: details.data.region.name,
+            id: location.id,
+            name: location.name,
+            region: location.region.name,
             generation:
-              details.data.game_indices[0]?.generation?.name || "unknown",
-            numberOfAreas: details.data.areas.length,
+              location.game_indices[0]?.generation?.name || "unknown",
+            numberOfAreas: location.areas.length,
           };
       });
       return locations;
