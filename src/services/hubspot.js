@@ -7,13 +7,50 @@ dotenv.config();
 const HUBSPOT_BASE_URL = 'https://api.hubapi.com';
 const HUBSPOT_API_KEY = process.env.HUBSPOT_API_KEY;
 
+async function checkIfRecordExists(endpoint, uniqueProperty, uniqueValue) {
+    try {
+        const response = await axios.post(
+            `${HUBSPOT_BASE_URL}/crm/v3/objects/${endpoint}/search`,
+            {
+                filterGroups: [
+                    {
+                        filters: [
+                            {
+                                propertyName: uniqueProperty,
+                                operator: 'EQ',
+                                value: uniqueValue,
+                            },
+                        ],
+                    },
+                ],
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${HUBSPOT_API_KEY}`,
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        // If records are found, return the first record's ID
+        if (response.data.results.length > 0) {
+            return response.data.results[0].id;
+        }
+        return null; // No record found
+    } catch (error) {
+        logger.log({ level: 'error', message: `Error checking if record exists: ${error.message}` });
+        throw error;
+    }
+}
+
 // Migrate Pokémon to Contacts
 async function migratePokemons(pokemons) {
     try {
         for (const pokemon of pokemons) {
             const contactData = {
                 properties: {
-                    email: `${pokemon.name.toLowerCase()}@pokemon.com`, // Add a unique email
+                    email: `${pokemon.name.toLowerCase()}@pokemon.com`, // Unique email
+                    firstname: pokemon.name,
                     pokedex_id: pokemon.id,
                     pokemon_name: pokemon.name,
                     hp: pokemon.hp,
@@ -25,18 +62,32 @@ async function migratePokemons(pokemons) {
                     types: pokemon.types.join(';'),
                 },
             };
-            await axios.post(`${HUBSPOT_BASE_URL}/crm/v3/objects/contacts`, contactData, {
-                headers: {
-                    Authorization: `Bearer ${HUBSPOT_API_KEY}`,
-                    'Content-Type': 'application/json',
-                },
-            });
 
-            logger.log({ level: 'info', message: `Pokémon migrated successfully: ${ JSON.stringify( pokemon ) }` });
+            // Check if the contact already exists
+            const existingContactId = await checkIfRecordExists('contacts', 'email', contactData.properties.email);
+
+            if (existingContactId) {
+                // Update existing contact
+                await axios.patch(`${HUBSPOT_BASE_URL}/crm/v3/objects/contacts/${existingContactId}`, contactData, {
+                    headers: {
+                        Authorization: `Bearer ${HUBSPOT_API_KEY}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+                logger.log({ level: 'info', message: `Pokémon updated successfully: ${JSON.stringify(pokemon)}` });
+            } else {
+                // Create new contact
+                await axios.post(`${HUBSPOT_BASE_URL}/crm/v3/objects/contacts`, contactData, {
+                    headers: {
+                        Authorization: `Bearer ${HUBSPOT_API_KEY}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+                logger.log({ level: 'info', message: `Pokémon created successfully: ${JSON.stringify(pokemon)}` });
+            }
         }
-        
     } catch (error) {
-        logger.log ({ level: 'error', message: `Error response: ${ JSON.stringify( error.response?.data ) }` }); // Log the full error response
+        logger.log({ level: 'error', message: `Error response: ${JSON.stringify(error.response?.data)}` });
         throw new Error(`Failed to migrate Pokémon: ${error.message}`);
     }
 }
@@ -53,15 +104,32 @@ async function migrateMoves(moves) {
                     power: move.power,
                 },
             };
-            await axios.post(`${HUBSPOT_BASE_URL}/crm/v3/objects/moves`, moveData, {
-                headers: {
-                    Authorization: `Bearer ${HUBSPOT_API_KEY}`
-                },
-            });
+
+            // Check if the move already exists
+            const existingMoveId = await checkIfRecordExists('moves', 'id', moveData.properties.id);
+
+            if (existingMoveId) {
+                // Update existing move
+                await axios.patch(`${HUBSPOT_BASE_URL}/crm/v3/objects/moves/${existingMoveId}`, moveData, {
+                    headers: {
+                        Authorization: `Bearer ${HUBSPOT_API_KEY}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+                console.log(`Move updated successfully: ${move.name}`);
+            } else {
+                // Create new move
+                await axios.post(`${HUBSPOT_BASE_URL}/crm/v3/objects/moves`, moveData, {
+                    headers: {
+                        Authorization: `Bearer ${HUBSPOT_API_KEY}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+                console.log(`Move created successfully: ${move.name}`);
+            }
         }
-        console.log('Moves migrated successfully!');
     } catch (error) {
-        console.error('Error response:', error.response?.data); // Log the full error response
+        console.error('Error response:', error.response?.data);
         throw new Error(`Failed to migrate Moves: ${error.message}`);
     }
 }
@@ -79,16 +147,32 @@ async function migrateLocations(locations) {
                     number_of_areas: location.numberOfAreas,
                 },
             };
-            await axios.post(`${HUBSPOT_BASE_URL}/crm/v3/objects/companies`, companyData, {
-                headers: {
-                    Authorization: `Bearer ${HUBSPOT_API_KEY}`,
-                    'Content-Type': 'application/json',
-                },
-            });
+
+            // Check if the company already exists
+            const existingCompanyId = await checkIfRecordExists('companies', 'location_id', companyData.properties.location_id);
+
+            if (existingCompanyId) {
+                // Update existing company
+                await axios.patch(`${HUBSPOT_BASE_URL}/crm/v3/objects/companies/${existingCompanyId}`, companyData, {
+                    headers: {
+                        Authorization: `Bearer ${HUBSPOT_API_KEY}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+                console.log(`Location updated successfully: ${location.name}`);
+            } else {
+                // Create new company
+                await axios.post(`${HUBSPOT_BASE_URL}/crm/v3/objects/companies`, companyData, {
+                    headers: {
+                        Authorization: `Bearer ${HUBSPOT_API_KEY}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+                console.log(`Location created successfully: ${location.name}`);
+            }
         }
-        console.log('Locations migrated successfully!');
     } catch (error) {
-        console.error('Error response:', error.response?.data); // Log the full error response
+        console.error('Error response:', error.response?.data);
         throw new Error(`Failed to migrate Locations: ${error.message}`);
     }
 }
@@ -96,5 +180,5 @@ async function migrateLocations(locations) {
 module.exports = {
     migratePokemons,
     migrateMoves,
-    migrateLocations
+    migrateLocations,
 };
